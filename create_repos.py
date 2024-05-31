@@ -1,28 +1,32 @@
-name: Run Python Script
+import requests
 
-on:
-  push:
-    branches:
-      - main  # Chạy workflow khi có thay đổi trên nhánh main
+# Thông tin xác thực GitHub
+username = 'your_github_username'
+token = 'your_github_personal_access_token'
 
-jobs:
-  run-script:
-    runs-on: ubuntu-latest
+# Danh sách tên các repo cần tạo
+repo_names = ['repo1', 'repo2', 'repo3']
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+# URL API GitHub
+api_url = 'https://api.github.com/user/repos'
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'  # Chọn phiên bản Python phù hợp
+# Headers cho request
+headers = {
+    'Authorization': f'token {token}',
+    'Accept': 'application/vnd.github.v3+json'
+}
 
-      - name: Install dependencies
-        run: pip install requests
+# Tạo từng repo
+for repo_name in repo_names:
+    data = {
+        'name': repo_name,
+        'description': 'Mô tả cho repo ' + repo_name,
+        'private': False  # Đặt True nếu muốn tạo repo riêng tư
+    }
 
-      - name: Run script
-        run: python create_repos.py
-        env:
-          GITHUB_USERNAME: ${{ secrets.GITHUB_USERNAME }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    response = requests.post(api_url, json=data, headers=headers)
+
+    if response.status_code == 201:
+        print(f'Tạo repo {repo_name} thành công!')
+    else:
+        print(f'Lỗi khi tạo repo {repo_name}: {response.json()}')
